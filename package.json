@@ -1,0 +1,16 @@
+{
+  "name": "villatoken",
+  "version": "1.0.0",
+  "description": "ERC-20 standard testing",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Ethereum",
+    "ICO",
+    "ERC-20"
+  ],
+  "author": "Jose Villarroel",
+  "license": "MIT"
+}
