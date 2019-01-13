@@ -62,4 +62,25 @@ contract('VillaToken', function(accounts){
             assert.equal(balance.toNumber(), 750000, 'removes amount from the sender');
         });
     });
+
+    it('approves token for delegated transfer', function(){
+        return VillaToken.deployed().then(function(instance){
+            tokenInstance = instance;
+            return tokenInstance.approve.call(accounts[1], 100);
+        }).then(function(success){
+            assert.equal(success, true, 'it returns boolean');
+            return tokenInstance.approve(accounts[1], 100);
+        }).then(function(receipt){
+            assert.equal(receipt.logs.length, 1, 'triggers one event');
+            assert.equal(receipt.logs[0].event, 'Approval', 'should be the "Approval" event');
+            assert.equal(receipt.logs[0].args._owner, accounts[0], 'logs the owning account');
+            assert.equal(receipt.logs[0].args._spender, accounts[1], 'logs the account receiving the permit');
+            assert.equal(receipt.logs[0].args._value, 100, 'logs the amount of tokens to be allowed to transfer');
+            return tokenInstance.allowance(accounts[0], accounts[1])
+        })
+        .then(function(allowance){
+            assert.equal(allowance.toNumber(), 100, 'maps the account and amount allowed to spend');
+        });
+    });
 });
+

@@ -9,14 +9,21 @@ contract  VillaToken {
     string public symbol = "VLLT";
     //standard
     string public standard = "Villa Token v1.0";
-    //event transfer
+    //events
     event Transfer(
         address indexed _from,
         address indexed _to,
         uint _value    
     );
+    event Approval(
+        address indexed _owner,
+        address indexed _spender,
+        uint256 _value
+    );
     //balances
     mapping (address=>uint256) public balanceOf;
+    //allowance
+    mapping(address=>mapping(address=>uint256)) public allowance;
     //constructor
     constructor (uint256 _initialSupply) public {
         //allocate balance to manager
@@ -39,4 +46,12 @@ contract  VillaToken {
         //return success status
         return true;
     }
+
+    //approve 
+    function approve(address _spender, uint256 _value) public returns(bool success) {
+        allowance[msg.sender][_spender] = _value;
+        emit Approval(msg.sender, _spender, _value);
+        return true;
+    }
+    
 }
