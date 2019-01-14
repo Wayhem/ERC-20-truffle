@@ -82,5 +82,46 @@ contract('VillaToken', function(accounts){
             assert.equal(allowance.toNumber(), 100, 'maps the account and amount allowed to spend');
         });
     });
+
+    it('handles delegated transfer (transferFrom)', function(){
+        const fromAccount = accounts[2],
+            delegatedAccount = accounts[4],
+            toAccount = accounts[3];
+        return VillaToken.deployed().then(function(instance){
+            tokenInstance = instance;
+            // transfer from account 0 to fromAccount some tokens
+            return tokenInstance.transfer(fromAccount, 100, {from: accounts[0]});
+        }).then(function(receipt){
+            // delegate to delegatedAccount some tokens from fromAccount
+            return tokenInstance.approve(delegatedAccount, 10, {from:fromAccount});
+        }).then(function(receipt){
+            // try transferring larger amount than the fromAccount balance
+            return tokenInstance.transferFrom(fromAccount, toAccount, 9999, {from:delegatedAccount});
+        }).then(assert.fail).catch(function(error){
+            assert(error.message.indexOf('revert')>= 0, 'cannot transfer larger value than token balance');
+            return tokenInstance.transferFrom(fromAccount, toAccount, 50, {from:delegatedAccount});
+        }).then(assert.fail).catch(function(error){
+            assert(error.message.indexOf('revert')>=0, 'cannot transfer more than allowed amount');
+            return tokenInstance.transferFrom.call(fromAccount, toAccount, 5, {from:delegatedAccount});
+        }).then(function(success){
+            assert.equal(success, true, 'returns boolean');
+            return tokenInstance.transferFrom(fromAccount, toAccount, 10, {from:delegatedAccount});
+        }).then(function(receipt){
+            assert.equal(receipt.logs.length, 1, 'triggers one event');
+            assert.equal(receipt.logs[0].event, 'Transfer', 'should be the "Transfer" event');
+            assert.equal(receipt.logs[0].args._from, fromAccount, 'logs the transferer');
+            assert.equal(receipt.logs[0].args._to, toAccount, 'logs the account receiving the tokens');
+            assert.equal(receipt.logs[0].args._value, 10, 'logs the amount of tokens to be transferred');
+            return tokenInstance.balanceOf(fromAccount);
+        }).then(function(balance){
+            assert.equal(balance.toNumber(), 90, 'successfully removes transferred tokens from balance');
+            return tokenInstance.balanceOf(toAccount);
+        }).then(function(balance){
+            assert.equal(balance.toNumber(), 10, 'successfully adds tokens to the receiver');
+            return tokenInstance.allowance(fromAccount, delegatedAccount);
+        }).then(function(allowance){
+            assert.equal(allowance.toNumber(), 0, 'deducts allowed money to spend from delegatedAccount');
+        });
+    });
 });
 

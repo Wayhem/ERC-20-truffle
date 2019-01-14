@@ -49,9 +49,32 @@ contract  VillaToken {
 
     //approve 
     function approve(address _spender, uint256 _value) public returns(bool success) {
+        //set allowance mapping
         allowance[msg.sender][_spender] = _value;
+        //emit event
         emit Approval(msg.sender, _spender, _value);
+        //return success status
         return true;
     }
     
+    function transferFrom(address _from, address _to, uint256 _value) public returns(bool success) {
+        //require balance
+        require(
+            _value <= balanceOf[_from],
+            "Not enough tokens to transfer"
+            );
+        //require allowance
+        require(
+            _value <= allowance[_from][msg.sender],
+            "Not enough allowed tokens to transfer"
+        );
+        //change balance and allowance
+        balanceOf[_from] -= _value;
+        balanceOf[_to] += _value;
+        allowance[_from][msg.sender] -= _value;
+        //emit event
+        emit Transfer(_from, _to, _value);
+        //return boolean
+        return true;
+    }
 }
